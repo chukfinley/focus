@@ -2,8 +2,18 @@
 
 ## Start the Backend
 
+### Option 1: Direct Python
+
 ```bash
 ./start_server.sh
+```
+
+### Option 2: Docker
+
+```bash
+docker build -t music-server .
+docker run -d --name music-server -p 5000:5000 \
+  -v $(pwd)/music:/app/music -v $(pwd)/data:/app/data music-server
 ```
 
 Default settings:
@@ -25,6 +35,12 @@ In the Flutter app, enter:
   - Find your IP: `ip addr` (Linux) or `ipconfig` (Windows)
   - Example: `http://192.168.1.100:5000`
 - **API Key**: `your-secret-api-key-123`
+
+## Features
+
+- **Play**: Tap on any song to stream and play it
+- **Upload**: Use the floating action button to upload music from your device
+- **Download**: Tap the download icon on any song to save it locally to your device
 
 ## Test with curl
 
