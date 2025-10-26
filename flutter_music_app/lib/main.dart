@@ -31,11 +31,11 @@ class MyApp extends StatelessWidget {
           background: const Color(0xFF0A0E21),
           error: const Color(0xFFCF6679),
         ),
-        cardTheme: CardTheme(
-          color: const Color(0xFF1D1E33),
+        cardTheme: const CardThemeData(
+          color: Color(0xFF1D1E33),
           elevation: 4,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
         ),
         appBarTheme: const AppBarTheme(
