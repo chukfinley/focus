@@ -75,11 +75,29 @@ class _MusicListScreenState extends State<MusicListScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading songs: $e')),
-        );
+        _showSnackBar('Error loading songs: $e', isError: true);
       }
     }
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isError ? Icons.error_outline : Icons.check_circle_outline,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: isError ? Colors.red : const Color(0xFF03DAC6),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   Future<void> _playSong(Song song) async {
@@ -101,9 +119,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
       await _audioPlayer.play();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error playing song: $e')),
-        );
+        _showSnackBar('Error playing song: $e', isError: true);
       }
     }
   }
@@ -132,23 +148,17 @@ class _MusicListScreenState extends State<MusicListScreen> {
 
         if (mounted) {
           if (success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Upload successful')),
-            );
+            _showSnackBar('Upload successful');
             _loadSongs();
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Upload failed')),
-            );
+            _showSnackBar('Upload failed', isError: true);
           }
         }
       }
     } catch (e) {
       setState(() => _isUploading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        _showSnackBar('Error: $e', isError: true);
       }
     }
   }
@@ -162,9 +172,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
           status = await Permission.storage.request();
           if (!status.isGranted) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Storage permission required')),
-              );
+              _showSnackBar('Storage permission required', isError: true);
             }
             return;
           }
@@ -176,6 +184,8 @@ class _MusicListScreenState extends State<MusicListScreen> {
       if (Platform.isAndroid) {
         directory = await getExternalStorageDirectory();
       } else if (Platform.isIOS) {
+        directory = await getApplicationDocumentsDirectory();
+      } else {
         directory = await getApplicationDocumentsDirectory();
       }
 
@@ -197,6 +207,10 @@ class _MusicListScreenState extends State<MusicListScreen> {
           final shouldOverwrite = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
+              backgroundColor: const Color(0xFF1D1E33),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               title: const Text('File exists'),
               content: Text('${song.filename} already exists. Overwrite?'),
               actions: [
@@ -204,7 +218,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
                   onPressed: () => Navigator.pop(context, false),
                   child: const Text('Cancel'),
                 ),
-                TextButton(
+                ElevatedButton(
                   onPressed: () => Navigator.pop(context, true),
                   child: const Text('Overwrite'),
                 ),
@@ -237,9 +251,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Downloaded to: $savePath')),
-        );
+        _showSnackBar('Downloaded successfully');
       }
     } catch (e) {
       setState(() {
@@ -247,9 +259,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download error: $e')),
-        );
+        _showSnackBar('Download error: $e', isError: true);
       }
     }
   }
@@ -277,11 +287,15 @@ class _MusicListScreenState extends State<MusicListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Music'),
+        title: const Text(
+          'My Music',
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,
+            tooltip: 'Logout',
           ),
         ],
       ),
@@ -289,141 +303,293 @@ class _MusicListScreenState extends State<MusicListScreen> {
         children: [
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF6C63FF),
+                    ),
+                  )
                 : _songs.isEmpty
-                    ? const Center(
-                        child: Text('No songs yet. Upload some music!'),
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.music_off,
+                              size: 80,
+                              color: Colors.white.withOpacity(0.3),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No songs yet',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.white.withOpacity(0.6),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Upload some music to get started!',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.4),
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     : RefreshIndicator(
                         onRefresh: _loadSongs,
+                        color: const Color(0xFF6C63FF),
                         child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
                           itemCount: _songs.length,
                           itemBuilder: (context, index) {
                             final song = _songs[index];
                             final isCurrentSong = _currentSong == song;
-
                             final isDownloading = _downloadProgress.containsKey(song.filename);
                             final progress = _downloadProgress[song.filename] ?? 0.0;
 
-                            return ListTile(
-                              leading: Icon(
-                                isCurrentSong && _isPlaying
-                                    ? Icons.pause_circle
-                                    : Icons.play_circle,
-                                color: isCurrentSong ? Colors.blue : null,
-                                size: 40,
-                              ),
-                              title: Text(
-                                song.title,
-                                style: TextStyle(
-                                  fontWeight: isCurrentSong
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Card(
+                                child: InkWell(
+                                  onTap: () => _playSong(song),
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 56,
+                                          height: 56,
+                                          decoration: BoxDecoration(
+                                            color: isCurrentSong
+                                                ? const Color(0xFF6C63FF)
+                                                : const Color(0xFF6C63FF).withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            isCurrentSong && _isPlaying
+                                                ? Icons.pause_rounded
+                                                : Icons.play_arrow_rounded,
+                                            color: Colors.white,
+                                            size: 32,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                song.title,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: isCurrentSong
+                                                      ? FontWeight.bold
+                                                      : FontWeight.w500,
+                                                  color: isCurrentSong
+                                                      ? const Color(0xFF6C63FF)
+                                                      : Colors.white,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                song.sizeInMB,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.white.withOpacity(0.6),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        if (isDownloading)
+                                          SizedBox(
+                                            width: 48,
+                                            height: 48,
+                                            child: Stack(
+                                              alignment: Alignment.center,
+                                              children: [
+                                                CircularProgressIndicator(
+                                                  value: progress,
+                                                  strokeWidth: 3,
+                                                  color: const Color(0xFF03DAC6),
+                                                  backgroundColor: Colors.white.withOpacity(0.1),
+                                                ),
+                                                Text(
+                                                  '${(progress * 100).toInt()}%',
+                                                  style: const TextStyle(fontSize: 10),
+                                                ),
+                                              ],
+                                            ),
+                                          )
+                                        else
+                                          IconButton(
+                                            icon: const Icon(Icons.download_rounded),
+                                            color: const Color(0xFF03DAC6),
+                                            onPressed: () => _downloadSong(song),
+                                            tooltip: 'Download',
+                                          ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
-                              subtitle: Text(song.sizeInMB),
-                              trailing: isDownloading
-                                  ? SizedBox(
-                                      width: 40,
-                                      height: 40,
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          CircularProgressIndicator(
-                                            value: progress,
-                                            strokeWidth: 2,
-                                          ),
-                                          Text(
-                                            '${(progress * 100).toInt()}%',
-                                            style: const TextStyle(fontSize: 8),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  : IconButton(
-                                      icon: const Icon(Icons.download),
-                                      onPressed: () => _downloadSong(song),
-                                    ),
-                              onTap: () => _playSong(song),
                             );
                           },
                         ),
                       ),
           ),
-          if (_currentSong != null)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _currentSong!.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text(_formatDuration(_position)),
-                      Expanded(
-                        child: Slider(
-                          value: _position.inSeconds.toDouble(),
-                          max: _duration.inSeconds.toDouble(),
-                          onChanged: (value) {
-                            _audioPlayer.seek(Duration(seconds: value.toInt()));
-                          },
-                        ),
-                      ),
-                      Text(_formatDuration(_duration)),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.stop),
-                        iconSize: 36,
-                        onPressed: _stopSong,
-                      ),
-                      const SizedBox(width: 20),
-                      IconButton(
-                        icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-                        iconSize: 48,
-                        onPressed: () => _playSong(_currentSong!),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          if (_currentSong != null) _buildMusicPlayer(),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _isUploading ? null : _uploadFile,
-        child: _isUploading
+        icon: _isUploading
             ? const SizedBox(
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: Colors.white,
                 ),
               )
-            : const Icon(Icons.upload_file),
+            : const Icon(Icons.upload_rounded),
+        label: Text(_isUploading ? 'Uploading...' : 'Upload'),
+      ),
+    );
+  }
+
+  Widget _buildMusicPlayer() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF6C63FF).withOpacity(0.8),
+            const Color(0xFF03DAC6).withOpacity(0.6),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6C63FF).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.music_note_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _currentSong!.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Now Playing',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Colors.white),
+                    onPressed: _stopSong,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    _formatDuration(_position),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderThemeData(
+                        trackHeight: 4,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                        activeTrackColor: Colors.white,
+                        inactiveTrackColor: Colors.white.withOpacity(0.3),
+                        thumbColor: Colors.white,
+                        overlayColor: Colors.white.withOpacity(0.3),
+                      ),
+                      child: Slider(
+                        value: _position.inSeconds.toDouble(),
+                        max: _duration.inSeconds.toDouble(),
+                        onChanged: (value) {
+                          _audioPlayer.seek(Duration(seconds: value.toInt()));
+                        },
+                      ),
+                    ),
+                  ),
+                  Text(
+                    _formatDuration(_duration),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(_isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded),
+                    iconSize: 48,
+                    color: Colors.white,
+                    onPressed: () => _playSong(_currentSong!),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
