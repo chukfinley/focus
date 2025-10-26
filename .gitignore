@@ -24,11 +24,17 @@ flutter_music_app/build/
 flutter_music_app/.metadata
 flutter_music_app/pubspec.lock
 flutter_music_app/ios/
-flutter_music_app/android/
 flutter_music_app/windows/
-flutter_music_app/linux/
 flutter_music_app/macos/
 flutter_music_app/web/
+
+# Flutter generated files
+flutter_music_app/.idea/
+flutter_music_app/flutter_music_app.iml
+flutter_music_app/android/flutter_music_app_android.iml
+flutter_music_app/analysis_options.yaml
+flutter_music_app/test/
+flutter_music_app/README.md
 
 # IDE
 .vscode/
