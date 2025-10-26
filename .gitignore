@@ -1,0 +1,42 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# Music files and data
+music/
+data/
+
+# Flutter
+flutter_music_app/.dart_tool/
+flutter_music_app/.flutter-plugins
+flutter_music_app/.flutter-plugins-dependencies
+flutter_music_app/.packages
+flutter_music_app/build/
+flutter_music_app/.metadata
+flutter_music_app/pubspec.lock
+flutter_music_app/ios/
+flutter_music_app/android/
+flutter_music_app/windows/
+flutter_music_app/linux/
+flutter_music_app/macos/
+flutter_music_app/web/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
