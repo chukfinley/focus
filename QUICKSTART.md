@@ -22,10 +22,18 @@ Default settings:
 
 ## Run the Flutter App
 
+**Android:**
 ```bash
 cd flutter_music_app
 flutter pub get
-flutter run
+flutter run  # Device must be connected
+```
+
+**Linux:**
+```bash
+cd flutter_music_app
+flutter pub get
+flutter run -d linux
 ```
 
 ## First Login

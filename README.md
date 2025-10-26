@@ -7,8 +7,8 @@ A simple personal music streaming system with upload capabilities, designed for 
 - Simple token-based authentication
 - Upload music files (MP3, FLAC, Opus)
 - Stream music from your server
-- Download songs to your mobile device
-- Mobile app for iOS/Android with progress indicators
+- Download songs to your device with progress indicators
+- **Cross-platform app**: Android and Linux support
 - Docker support with uv for fast builds
 - No database required - uses JSON and local files
 
@@ -69,6 +69,8 @@ See [DOCKER.md](DOCKER.md) for detailed Docker instructions and deployment optio
 
 ### Flutter App Setup
 
+The Flutter app supports **Android** and **Linux** platforms.
+
 1. Navigate to the Flutter app directory:
 ```bash
 cd flutter_music_app
@@ -80,13 +82,23 @@ flutter pub get
 ```
 
 3. Run the app:
+
+**For Android:**
 ```bash
+# Connect your Android device via USB or start an emulator
+flutter devices
 flutter run
 ```
 
-For Android/iOS physical device, ensure your phone is connected and detected:
+**For Linux:**
 ```bash
-flutter devices
+flutter run -d linux
+```
+
+**For Android APK (Release):**
+```bash
+flutter build apk --release
+# APK will be in: build/app/outputs/flutter-apk/app-release.apk
 ```
 
 ### Configuration
