@@ -24,6 +24,9 @@ COPY backend/ /app/
 # Create directories for music and data
 RUN mkdir -p /app/music /app/data
 
+# Declare volumes for persistent storage
+VOLUME ["/app/music", "/app/data"]
+
 # Expose port
 EXPOSE 5000
 

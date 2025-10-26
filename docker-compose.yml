@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  music-server:
+    build: .
+    container_name: music-server
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - API_KEY=${API_KEY:-your-secret-api-key-123}
+      - SECRET_KEY=${SECRET_KEY:-flask-secret-key-456}
+    volumes:
+      # Persistent storage for music files and database
+      - ./music:/app/music
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

@@ -8,13 +8,20 @@
 ./start_server.sh
 ```
 
-### Option 2: Docker
+### Option 2: Docker (mit persistenten Volumes)
 
 ```bash
 docker build -t music-server .
-docker run -d --name music-server -p 5000:5000 \
-  -v $(pwd)/music:/app/music -v $(pwd)/data:/app/data music-server
+docker run -d \
+  --name music-server \
+  --restart unless-stopped \
+  -p 5000:5000 \
+  -v $(pwd)/music:/app/music \
+  -v $(pwd)/data:/app/data \
+  music-server
 ```
+
+**⚠️ Wichtig:** Die `-v` Flags sind nötig, damit deine Songs beim Redeploy nicht verloren gehen!
 
 Default settings:
 - Server: `http://0.0.0.0:5000`

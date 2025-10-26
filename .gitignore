@@ -15,6 +15,9 @@ env/
 music/
 data/
 
+# Environment files
+.env
+
 # Flutter
 flutter_music_app/.dart_tool/
 flutter_music_app/.flutter-plugins

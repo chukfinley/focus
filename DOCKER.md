@@ -10,24 +10,36 @@ docker build -t music-server .
 
 ## Running the Container
 
-### Basic Usage
+### ⚠️ WICHTIG: Persistente Volumes
 
-Run with default settings:
+**Das Dockerfile nutzt Volumes für persistente Datenspeicherung!**
+
+Die Verzeichnisse `/app/music` und `/app/data` sind als Volumes deklariert.
+Das bedeutet: **Du MUSST diese Volumes mounten**, sonst gehen deine Songs und Daten beim Container-Neustart verloren!
+
+### Empfohlene Verwendung (mit Volumes)
 
 ```bash
 docker run -d \
   --name music-server \
+  --restart unless-stopped \
   -p 5000:5000 \
   -v $(pwd)/music:/app/music \
   -v $(pwd)/data:/app/data \
   music-server
 ```
 
-### With Custom API Key
+**Was passiert hier:**
+- `-v $(pwd)/music:/app/music` - Music-Dateien werden im lokalen `music/` Ordner gespeichert
+- `-v $(pwd)/data:/app/data` - Datenbank (songs.json) wird im lokalen `data/` Ordner gespeichert
+- `--restart unless-stopped` - Container startet automatisch nach Neustart
+
+### Mit Custom API Key
 
 ```bash
 docker run -d \
   --name music-server \
+  --restart unless-stopped \
   -p 5000:5000 \
   -e API_KEY="my-super-secret-key" \
   -v $(pwd)/music:/app/music \
@@ -35,12 +47,35 @@ docker run -d \
   music-server
 ```
 
-## Volume Mounts
+### Mit Docker Compose (Optional, einfacher)
 
-- `/app/music` - Directory for uploaded music files
-- `/app/data` - Directory for JSON database (songs.json)
+Wenn du `docker-compose.yml` nutzen möchtest:
 
-Mount these as volumes to persist data between container restarts.
+```bash
+# .env File erstellen (optional)
+cp .env.example .env
+# Anpassen: API_KEY in .env
+
+# Starten
+docker-compose up -d
+
+# Stoppen
+docker-compose down
+
+# Logs ansehen
+docker-compose logs -f
+```
+
+## Volume Mounts Erklärt
+
+- `/app/music` - **Uploaded Music Files** (MP3, FLAC, Opus)
+- `/app/data` - **JSON Database** (songs.json mit Metadaten)
+
+**Diese Volumes bleiben erhalten bei:**
+- Container-Neustart
+- Container-Stopp und -Start
+- Image-Update/Rebuild
+- Redeploy
 
 ## Environment Variables
 

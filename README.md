@@ -49,21 +49,25 @@ The server will start on `http://0.0.0.0:5000`
 
 ### Docker Setup (Alternative)
 
-If you prefer using Docker:
+If you prefer using Docker with **persistent storage**:
 
 ```bash
 # Build the image
 docker build -t music-server .
 
-# Run the container
+# Run the container with persistent volumes
 docker run -d \
   --name music-server \
+  --restart unless-stopped \
   -p 5000:5000 \
   -e API_KEY="your-custom-api-key" \
   -v $(pwd)/music:/app/music \
   -v $(pwd)/data:/app/data \
   music-server
 ```
+
+**Important:** The `-v` flags mount local directories to persist your music and data.
+Without these, your songs will be lost when the container is removed!
 
 See [DOCKER.md](DOCKER.md) for detailed Docker instructions and deployment options.
 
