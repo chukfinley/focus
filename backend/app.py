@@ -68,50 +68,90 @@ def get_songs():
 @app.route('/upload', methods=['POST'])
 @require_auth
 def upload_file():
-    """Upload a music file"""
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
+    """Upload one or multiple music files"""
+    if 'file' not in request.files and 'files' not in request.files:
+        return jsonify({'error': 'No file(s) provided'}), 400
 
-    file = request.files['file']
+    # Get files from request - support both 'file' (single) and 'files' (multiple)
+    files_to_upload = []
 
-    if file.filename == '':
+    # Check for multiple files
+    if 'files' in request.files:
+        files_list = request.files.getlist('files')
+        files_to_upload.extend(files_list)
+
+    # Check for single file
+    if 'file' in request.files:
+        single_file = request.files['file']
+        if single_file.filename != '':
+            files_to_upload.append(single_file)
+
+    if not files_to_upload:
         return jsonify({'error': 'No file selected'}), 400
 
-    if not allowed_file(file.filename):
-        return jsonify({'error': f'Invalid file type. Allowed: {", ".join(ALLOWED_EXTENSIONS)}'}), 400
-
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(MUSIC_DIR, filename)
-
-    # Save file
-    file.save(filepath)
-
-    # Get file info
-    file_size = os.path.getsize(filepath)
-
-    # Update songs database
+    uploaded_files = []
+    failed_files = []
     songs = load_songs()
 
-    # Check if song already exists
-    existing = next((s for s in songs if s['filename'] == filename), None)
-    if existing:
-        existing['updated_at'] = datetime.now().isoformat()
-        existing['size'] = file_size
-    else:
-        songs.append({
-            'filename': filename,
-            'size': file_size,
-            'uploaded_at': datetime.now().isoformat(),
-            'title': filename.rsplit('.', 1)[0]  # Use filename without extension as title
-        })
+    for file in files_to_upload:
+        if file.filename == '':
+            continue
 
+        if not allowed_file(file.filename):
+            failed_files.append({
+                'filename': file.filename,
+                'error': f'Invalid file type. Allowed: {", ".join(ALLOWED_EXTENSIONS)}'
+            })
+            continue
+
+        try:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(MUSIC_DIR, filename)
+
+            # Save file
+            file.save(filepath)
+
+            # Get file info
+            file_size = os.path.getsize(filepath)
+
+            # Check if song already exists
+            existing = next((s for s in songs if s['filename'] == filename), None)
+            if existing:
+                existing['updated_at'] = datetime.now().isoformat()
+                existing['size'] = file_size
+            else:
+                songs.append({
+                    'filename': filename,
+                    'size': file_size,
+                    'uploaded_at': datetime.now().isoformat(),
+                    'title': filename.rsplit('.', 1)[0]
+                })
+
+            uploaded_files.append(filename)
+
+        except Exception as e:
+            failed_files.append({
+                'filename': file.filename,
+                'error': str(e)
+            })
+
+    # Save updated songs database
     save_songs(songs)
 
-    return jsonify({
-        'success': True,
-        'message': 'File uploaded successfully',
-        'filename': filename
-    }), 201
+    # Prepare response
+    response = {
+        'success': len(uploaded_files) > 0,
+        'uploaded': len(uploaded_files),
+        'failed': len(failed_files),
+        'files': uploaded_files
+    }
+
+    if failed_files:
+        response['errors'] = failed_files
+
+    status_code = 201 if len(uploaded_files) > 0 else 400
+
+    return jsonify(response), status_code
 
 
 @app.route('/stream/<filename>', methods=['GET'])

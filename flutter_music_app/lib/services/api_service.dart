@@ -108,6 +108,54 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> uploadMultipleSongs(List<File> files) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/upload'),
+      );
+
+      request.headers.addAll(_headers);
+
+      // Add all files to the request
+      for (var file in files) {
+        request.files.add(await http.MultipartFile.fromPath('files', file.path));
+      }
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'uploaded': data['uploaded'] ?? 0,
+          'failed': data['failed'] ?? 0,
+          'files': data['files'] ?? [],
+          'errors': data['errors'] ?? [],
+        };
+      }
+
+      return {
+        'success': false,
+        'uploaded': 0,
+        'failed': files.length,
+        'files': [],
+        'errors': [],
+      };
+    } catch (e) {
+      print('Multi-upload error: $e');
+      return {
+        'success': false,
+        'uploaded': 0,
+        'failed': files.length,
+        'files': [],
+        'errors': [],
+        'exception': e.toString(),
+      };
+    }
+  }
+
   Future<void> downloadSong(
     String filename,
     String savePath, {

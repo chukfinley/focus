@@ -136,20 +136,48 @@ class _MusicListScreenState extends State<MusicListScreen> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.audio,
+        allowMultiple: true,  // Enable multiple file selection
       );
 
-      if (result != null && result.files.single.path != null) {
+      if (result != null && result.files.isNotEmpty) {
         setState(() => _isUploading = true);
 
-        final file = File(result.files.single.path!);
-        final success = await widget.apiService.uploadSong(file);
+        // Get all selected files
+        final files = result.files
+            .where((file) => file.path != null)
+            .map((file) => File(file.path!))
+            .toList();
+
+        if (files.isEmpty) {
+          setState(() => _isUploading = false);
+          if (mounted) {
+            _showSnackBar('No valid files selected', isError: true);
+          }
+          return;
+        }
+
+        // Upload multiple files
+        final uploadResult = await widget.apiService.uploadMultipleSongs(files);
 
         setState(() => _isUploading = false);
 
         if (mounted) {
-          if (success) {
-            _showSnackBar('Upload successful');
+          final uploaded = uploadResult['uploaded'] ?? 0;
+          final failed = uploadResult['failed'] ?? 0;
+
+          if (uploaded > 0) {
             _loadSongs();
+
+            if (failed > 0) {
+              _showSnackBar(
+                'Uploaded $uploaded file(s), $failed failed',
+                isError: true,
+              );
+            } else {
+              _showSnackBar(
+                'Successfully uploaded $uploaded file(s)',
+              );
+            }
           } else {
             _showSnackBar('Upload failed', isError: true);
           }
